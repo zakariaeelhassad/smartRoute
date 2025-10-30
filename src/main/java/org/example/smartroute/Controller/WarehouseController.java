@@ -1,4 +1,4 @@
-package org.example.smartroute.controllers;
+package org.example.smartroute.Controller;
 
 
 import jakarta.validation.Valid;
