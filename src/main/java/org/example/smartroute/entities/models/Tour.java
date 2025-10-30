@@ -1,6 +1,6 @@
 package org.example.smartroute.entities.models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -37,6 +37,7 @@ public class Tour {
     private Vehicle vehicle;
 
     @OneToMany(mappedBy = "tour", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Delivery> deliveries;
 
 }

@@ -1,5 +1,6 @@
 package org.example.smartroute.entities.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -47,6 +48,7 @@ public class Delivery {
 
     @ManyToOne
     @JoinColumn(name = "tour_id")
+    @JsonBackReference
     private Tour tour;
 
 }
