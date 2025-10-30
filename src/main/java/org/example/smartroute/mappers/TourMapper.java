@@ -13,7 +13,6 @@ import org.mapstruct.Mapping;
 public interface TourMapper extends GenericMapper<Tour, TourDto> {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "algorithmType", ignore = true)
     Tour toEntity(CreateTourDto dto);
 
     TourDto toDto(Tour tour);
