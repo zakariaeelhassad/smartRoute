@@ -25,12 +25,4 @@ public class TourUtils {
 
         return totalDistance;
     }
-
-    public static String formatDistance(double distanceInKm){
-        if(distanceInKm < 1){
-            return String.format("%.0f m", distanceInKm * 1000);
-        } else {
-            return String.format("%.1f Km", distanceInKm);
-        }
-    }
 }

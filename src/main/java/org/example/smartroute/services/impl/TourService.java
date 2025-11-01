@@ -10,6 +10,7 @@ import org.example.smartroute.repositories.DeliveryRepository;
 import org.example.smartroute.repositories.TourRepository;
 import org.example.smartroute.services.ITourService;
 import org.example.smartroute.utils.DistanceCalculator;
+import org.example.smartroute.utils.TourUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +50,12 @@ public class TourService implements ITourService {
         if (tour.getDeliveries() != null) {
             tour.getDeliveries().forEach(d -> d.setTour(tour));
         }
+
+        if (tour.getAlgorithmType() != null && tour.getDeliveries() != null && !tour.getDeliveries().isEmpty()) {
+            List<Delivery> optimized = optimizeList(tour);
+            tour.setDeliveries(optimized);
+        }
+
         Tour saved = tourRepository.save(tour);
         return tourMapper.toDto(saved);
     }
@@ -68,6 +75,11 @@ public class TourService implements ITourService {
             existing.getDeliveries().clear();
             existing.getDeliveries().addAll(dto.deliveries());
             existing.getDeliveries().forEach(d -> d.setTour(existing));
+        }
+
+        if (existing.getAlgorithmType() != null && existing.getDeliveries() != null && !existing.getDeliveries().isEmpty()) {
+            List<Delivery> optimized = optimizeList(existing);
+            existing.setDeliveries(optimized);
         }
 
         Tour updated = tourRepository.save(existing);
@@ -128,6 +140,11 @@ public class TourService implements ITourService {
         deliveries.forEach(d -> d.setTour(tour));
         tour.getDeliveries().addAll(deliveries);
 
+        if (tour.getAlgorithmType() != null && !tour.getDeliveries().isEmpty()) {
+            List<Delivery> optimized = optimizeList(tour);
+            tour.setDeliveries(optimized);
+        }
+
         Tour saved = tourRepository.save(tour);
         return tourMapper.toDto(saved);
     }
@@ -140,22 +157,13 @@ public class TourService implements ITourService {
             case CLARKE_WRIGHT -> clarkeWrightOptimizer.optimizerTour(tour);
         };
 
-        double totalDistance = 0.0;
-
-        if (!optimized.isEmpty()) {
-            totalDistance += distanceCalculator.distance(tour.getWarehouse(), optimized.get(0));
-        }
-
-        for (int i = 0; i < optimized.size() - 1; i++) {
-            totalDistance += distanceCalculator.distance(optimized.get(i), optimized.get(i + 1));
-        }
-
-        if (!optimized.isEmpty()) {
-            totalDistance += distanceCalculator.distance(tour.getWarehouse(), optimized.get(optimized.size() - 1));
-        }
+        double totalDistance = TourUtils.calculateTotalDistance(
+                tour.getWarehouse(),
+                optimized,
+                distanceCalculator
+        );
 
         tour.setTotalDistance(totalDistance);
-
         return optimized;
     }
 }

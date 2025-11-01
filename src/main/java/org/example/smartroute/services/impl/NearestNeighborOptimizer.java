@@ -10,17 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Nearest Neighbor optimizer implementation.
- *
- * Principe :
- *  - Démarrer depuis l'entrepôt (warehouse)
- *  - À chaque étape, aller au client non-visité le plus proche
- *  - Continuer jusqu'à avoir visité tous les clients
- *
- * Retour :
- *  - Liste ordonnée des Delivery (ordre de visite)
- */
 public class NearestNeighborOptimizer implements TourOptimizer {
 
     private final DistanceCalculator distanceCalculator;
@@ -37,15 +26,12 @@ public class NearestNeighborOptimizer implements TourOptimizer {
 
         if (originals == null || originals.isEmpty()) return List.of();
         if (warehouse == null) {
-            // If no warehouse, fallback: return original order (or you can throw)
             return new ArrayList<>(originals);
         }
 
-        // Copy to a mutable list of remaining deliveries
         List<Delivery> remaining = new ArrayList<>(originals);
         List<Delivery> ordered = new ArrayList<>();
 
-        // Current location starts at warehouse
         double currentLat = warehouse.getLatitude();
         double currentLon = warehouse.getLongitude();
 
@@ -54,7 +40,6 @@ public class NearestNeighborOptimizer implements TourOptimizer {
             double minDistance = Double.MAX_VALUE;
 
             for (Delivery d : remaining) {
-                // guard against null coordinates
                 if (d == null || d.getLatitude() == null || d.getLongitude() == null) continue;
 
                 double dist = distanceCalculator.distance(currentLat, currentLon, d.getLatitude(), d.getLongitude());
@@ -64,12 +49,11 @@ public class NearestNeighborOptimizer implements TourOptimizer {
                 }
             }
 
-            if (nearest == null) break; // nothing valid left
+            if (nearest == null) break;
 
             ordered.add(nearest);
             remaining.remove(nearest);
 
-            // move current location to the chosen delivery
             currentLat = nearest.getLatitude();
             currentLon = nearest.getLongitude();
         }

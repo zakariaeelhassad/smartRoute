@@ -25,7 +25,6 @@ public class ClarkeWrightOptimizer implements TourOptimizer {
             return deliveries != null ? deliveries : Collections.emptyList();
         }
 
-        // Étape 1 : Calculer les économies pour chaque paire (i, j)
         List<Saving> savingsList = new ArrayList<>();
         for (int i = 0; i < deliveries.size(); i++) {
             for (int j = i + 1; j < deliveries.size(); j++) {
@@ -41,10 +40,8 @@ public class ClarkeWrightOptimizer implements TourOptimizer {
             }
         }
 
-        // Étape 2 : Trier les économies par ordre décroissant
         savingsList.sort((a, b) -> Double.compare(b.value, a.value));
 
-        // Étape 3 : Construire les routes à partir des économies
         Map<Delivery, Route> deliveryToRoute = new HashMap<>();
         List<Route> routes = new ArrayList<>();
 
@@ -52,7 +49,6 @@ public class ClarkeWrightOptimizer implements TourOptimizer {
             Route routeI = deliveryToRoute.get(s.i);
             Route routeJ = deliveryToRoute.get(s.j);
 
-            // Cas 1 : ni i ni j ne sont encore dans une route → créer une nouvelle
             if (routeI == null && routeJ == null) {
                 Route newRoute = new Route();
                 newRoute.add(s.i);
@@ -60,19 +56,13 @@ public class ClarkeWrightOptimizer implements TourOptimizer {
                 routes.add(newRoute);
                 deliveryToRoute.put(s.i, newRoute);
                 deliveryToRoute.put(s.j, newRoute);
-            }
-            // Cas 2 : i est en fin de route et j est libre → ajouter j à la fin
-            else if (routeI != null && routeJ == null && routeI.canAppend(s.i)) {
+            } else if (routeI != null && routeJ == null && routeI.canAppend(s.i)) {
                 routeI.add(s.j);
                 deliveryToRoute.put(s.j, routeI);
-            }
-            // Cas 3 : j est en début de route et i est libre → ajouter i au début
-            else if (routeJ != null && routeI == null && routeJ.canPrepend(s.j)) {
+            } else if (routeJ != null && routeI == null && routeJ.canPrepend(s.j)) {
                 routeJ.prepend(s.i);
                 deliveryToRoute.put(s.i, routeJ);
-            }
-            // Cas 4 : fusion de deux routes (si possible)
-            else if (routeI != null && routeJ != null && routeI != routeJ) {
+            } else if (routeI != null && routeJ != null && routeI != routeJ) {
                 if (routeI.canAppend(s.i) && routeJ.canPrepend(s.j)) {
                     routeI.merge(routeJ);
                     for (Delivery d : routeJ.deliveries) {
@@ -81,10 +71,8 @@ public class ClarkeWrightOptimizer implements TourOptimizer {
                     routes.remove(routeJ);
                 }
             }
-            // Sinon → pas de fusion possible
         }
 
-        // Étape 4 : Sélectionner la plus grande route (finale)
         Route finalRoute = routes.stream()
                 .max(Comparator.comparingInt(r -> r.deliveries.size()))
                 .orElseGet(() -> {
@@ -96,7 +84,6 @@ public class ClarkeWrightOptimizer implements TourOptimizer {
         return new ArrayList<>(finalRoute.deliveries);
     }
 
-    // 🔹 Classe interne pour représenter une route temporaire
     private static class Route {
         List<Delivery> deliveries = new ArrayList<>();
 
@@ -121,7 +108,6 @@ public class ClarkeWrightOptimizer implements TourOptimizer {
         }
     }
 
-    // 🔹 Structure pour stocker les économies entre deux clients
     private static class Saving {
         Delivery i;
         Delivery j;
