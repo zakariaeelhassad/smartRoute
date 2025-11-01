@@ -14,5 +14,6 @@ public interface ITourService {
     TourDto getById(Long id);
     List<TourDto> getAll();
     void optimizeTour(Long id);
+    TourDto addDeliveriesToTour(Long tourId, List<Long> deliveryIds);
 
 }
