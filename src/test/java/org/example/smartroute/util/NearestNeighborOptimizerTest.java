@@ -2,53 +2,76 @@ package org.example.smartroute.util;
 
 import org.example.smartroute.entities.models.Delivery;
 import org.example.smartroute.entities.models.Tour;
-import org.example.smartroute.utils.NearestNeighborOptimizer;
+import org.example.smartroute.entities.models.Warehouse;
+import org.example.smartroute.services.impl.NearestNeighborOptimizer;
+import org.example.smartroute.utils.DistanceCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.util.Arrays;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class NearestNeighborOptimizerTest {
+class NearestNeighborOptimizerTest {
+
     private NearestNeighborOptimizer optimizer;
-    private Tour tour;
-    private Delivery d1;
-    private Delivery d2;
-    private Delivery d3;
+    private DistanceCalculator distanceCalculator;
 
     @BeforeEach
     void setUp() {
-        optimizer = new NearestNeighborOptimizer();
-
-        d1 = new Delivery();
-        d1.setId(1L);
-        d1.setLatitude(0.0);
-        d1.setLongitude(0.0);
-
-        d2 = new Delivery();
-        d2.setId(2L);
-        d2.setLatitude(1.0);
-        d2.setLongitude(1.0);
-
-        d3 = new Delivery();
-        d3.setId(3L);
-        d3.setLatitude(2.0);
-        d3.setLongitude(2.0);
-
-        tour = new Tour();
-        tour.setDeliveries(Arrays.asList(d1, d2, d3));
+        distanceCalculator = new DistanceCalculator();
+        optimizer = new NearestNeighborOptimizer(distanceCalculator);
     }
 
     @Test
-    void testCalculateOptimalTour() {
-        List<Delivery> result = optimizer.calculateOptimalTour(tour);
+    void testOptimizerTour_ReturnsEmptyList_WhenNoDeliveries() {
+        Tour tour = new Tour();
+        tour.setDeliveries(List.of());
 
-        assertEquals(3, result.size(), "Le nombre de livraisons dans le résultat doit être 3");
+        List<Delivery> result = optimizer.optimizerTour(tour);
+        assertTrue(result.isEmpty(), "Result should be empty when no deliveries exist");
+    }
 
-        assertEquals(1L, result.get(0).getId(), "La première livraison doit être d1");
-        assertEquals(2L, result.get(1).getId(), "La deuxième livraison doit être d2");
-        assertEquals(3L, result.get(2).getId(), "La dernière livraison doit être d3");
+    @Test
+    void testOptimizerTour_ReturnsOriginalList_WhenNoWarehouse() {
+        Delivery d1 = createDelivery(1L, 34.0, -6.0);
+        Delivery d2 = createDelivery(2L, 35.0, -6.5);
+
+        Tour tour = new Tour();
+        tour.setDeliveries(List.of(d1, d2));
+        tour.setWarehouse(null);
+
+        List<Delivery> result = optimizer.optimizerTour(tour);
+
+        assertEquals(2, result.size());
+        assertTrue(result.containsAll(List.of(d1, d2)));
+    }
+
+    @Test
+    void testOptimizerTour_ReturnsOrderedList_ByNearestNeighbor() {
+        Warehouse warehouse = new Warehouse();
+        warehouse.setLatitude(34.0);
+        warehouse.setLongitude(-6.0);
+
+        Delivery d1 = createDelivery(1L, 34.1, -6.1); // قريب بزاف
+        Delivery d2 = createDelivery(2L, 35.0, -7.0); // بعيد
+
+        Tour tour = new Tour();
+        tour.setWarehouse(warehouse);
+        tour.setDeliveries(List.of(d1, d2));
+
+        List<Delivery> result = optimizer.optimizerTour(tour);
+
+        assertEquals(2, result.size());
+        assertEquals(d1, result.get(0), "Nearest delivery should be first");
+        assertEquals(d2, result.get(1), "Farthest delivery should be last");
+    }
+
+    private Delivery createDelivery(Long id, double lat, double lon) {
+        Delivery d = new Delivery();
+        d.setId(id);
+        d.setLatitude(lat);
+        d.setLongitude(lon);
+        return d;
     }
 }
